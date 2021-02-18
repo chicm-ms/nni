@@ -61,30 +61,25 @@ $boxGapPadding: 10px;
 }
 
 .basic {
-	line-height: 21px;
-	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 21px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
-	p {
-		color: #8f8f8f;
+    p {
 		font-size: 14px;
 		font-weight: normal;
+        color: #8f8f8f;
 
-		span {
-			color: #484848;
-		}
-	}
+        span {
+            color: #484848;
+        }
+    }
 
-	div {
-		font-size: 16px;
-		font-weight: 500;
-		color: #484848;
-	}
-
-	.nowrap {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
+    div {
+        font-size: 16px;
+        font-weight: 500;
+        color: #484848;
+    }
+    
 }
 
 .overviewBestMetric {
@@ -125,14 +120,4 @@ $boxGapPadding: 10px;
 
 .overviewChart {
 	margin-top: 20px;
-}
-
-.defaultMetricContainer {
-	position: relative;
-
-	.showMess {
-		position: absolute;
-		top: 42%;
-		left: 48%;
-	}
 }

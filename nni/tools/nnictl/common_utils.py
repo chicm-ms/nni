@@ -21,7 +21,7 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file, Loader=yaml.Loader)
+            return yaml.load(file, Loader=yaml.SafeLoader)
     except yaml.scanner.ScannerError as err:
         print_error('yaml file format error!')
         print_error(err)
@@ -130,4 +130,4 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
         return None
 
 def get_file_lock(path: string, stale=-1):
-    return SimplePreemptiveLock(path + '.lock', stale=-1)
+    return SimplePreemptiveLock(path + '.lock', stale=stale)

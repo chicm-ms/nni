@@ -55,31 +55,6 @@ from setuptools.command.develop import develop
 
 import setup_ts
 
-
-dependencies = [
-    'astor',
-    'hyperopt==0.1.2',
-    'json_tricks',
-    'netifaces',
-    'psutil',
-    'ruamel.yaml',
-    'requests',
-    'responses',
-    'scipy',
-    'schema',
-    'PythonWebHDFS',
-    'colorama',
-    'scikit-learn>=0.23.2',
-    'pkginfo',
-    'websockets',
-    'filelock',
-    'prettytable',
-    'dataclasses ; python_version < "3.7"',
-    'numpy < 1.19.4 ; sys_platform == "win32"',
-    'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
-    'numpy ; sys.platform != "win32" and python_version >= "3.7"'
-]
-
 release = os.environ.get('NNI_RELEASE')
 
 def _setup():
@@ -104,12 +79,17 @@ def _setup():
 
         packages = _find_python_packages(),
         package_data = {
-            'nni': _find_requirements_txt(),  # must do this manually due to setuptools issue #1806
+            'nni': _find_requirements_txt() + _find_default_config(),  # setuptools issue #1806
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
         python_requires = '>=3.6',
-        install_requires = dependencies,
+        install_requires = _read_requirements_txt('dependencies/required.txt'),
+        extras_require = {
+            'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),
+            'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
+            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner')
+        },
         setup_requires = ['requests'],
 
         entry_points = {
@@ -130,7 +110,7 @@ def _setup():
 def _find_python_packages():
     packages = []
     for dirpath, dirnames, filenames in os.walk('nni'):
-        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath:
+        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath and '/default_config' not in dirpath:
             packages.append(dirpath.replace('/', '.'))
     return sorted(packages) + ['nni_node']
 
@@ -141,9 +121,12 @@ def _find_requirements_txt():
             requirement_files.append(os.path.join(dirpath[len('nni/'):], 'requirements.txt'))
     return requirement_files
 
+def _find_default_config():
+    return ['runtime/default_config/' + name for name in os.listdir('nni/runtime/default_config')]
+
 def _find_node_files():
     if not os.path.exists('nni_node'):
-        if release and 'build_ts' not in sys.argv:
+        if release and 'build_ts' not in sys.argv and 'clean' not in sys.argv:
             sys.exit('ERROR: To build a release version, run "python setup.py build_ts" first')
         return []
     files = []
@@ -154,9 +137,25 @@ def _find_node_files():
         files.remove('__init__.py')
     return sorted(files)
 
+def _read_requirements_txt(file_path, section=None):
+    with open(file_path) as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]  # remove whitespaces and empty lines
+    if section is None:
+        return [line for line in lines if not line.startswith('#')]
+    selected_lines = []
+    started = False
+    for line in lines:
+        if started:
+            if line.startswith('#'):
+                return selected_lines
+            else:
+                selected_lines.append(line)
+        elif line.startswith('# ' + section):
+            started = True
+    return selected_lines
+
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
-
 
 class BuildTs(Command):
     description = 'build TypeScript modules'
@@ -178,6 +177,7 @@ class Build(build):
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+        open('nni/version.py', 'w').write(f"__version__ = '{release}'")
         super().run()
 
 class Develop(develop):
@@ -201,6 +201,7 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
+        open('nni/version.py', 'w').write("__version__ = '999.dev0'")
         if not self.skip_ts:
             setup_ts.build(release=None)
         super().run()

@@ -31,7 +31,6 @@ if sys.platform == 'win32':
         def close(self) -> None:
             if self.file is not None:
                 self.file.close()
-            _winapi.CloseHandle(self._handle)
 
     Pipe = WindowsPipe
 
@@ -52,7 +51,7 @@ else:
 
         def connect(self) -> BufferedIOBase:
             conn, _ = self._socket.accept()
-            self.file = conn.makefile('w+b')
+            self.file = conn.makefile('rwb')
             return self.file
 
         def close(self) -> None:

@@ -11,7 +11,7 @@ Prerequisite for Kubernetes Service
 
 #. A **Kubernetes** cluster using Kubernetes 1.14 or later with storage. Follow this guideline to set up Kubernetes `on Azure <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , or `on-premise <https://kubernetes.io/docs/setup/>`__ with `cephfs <https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd>`__\ , or `microk8s with storage add-on enabled <https://microk8s.io/docs/addons>`__.
 #. Helm install **AdaptDL Scheduler** to your Kubernetes cluster. Follow this `guideline <https://adaptdl.readthedocs.io/en/latest/installation/install-adaptdl.html>`__ to setup AdaptDL scheduler.
-#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the** KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
+#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use ``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify other kubeconfig files by setting the ** KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
 #. If your NNI trial job needs GPU resource, you should follow this `guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure **Nvidia device plugin for Kubernetes**.
 #. (Optional) Prepare a **NFS server** and export a general purpose mount as external storage.
 #. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
@@ -72,11 +72,11 @@ Here is a template configuration specification to use AdaptDL as a training serv
        path: /
        containerMountPath: /nfs
      checkpoint: # optional
-       storageClass: microk8s-hostpath
+       storageClass: dfs
        storageSize: 1Gi
 
 Those configs not mentioned below, are following the
-`default specs defined in the NNI doc </Tutorial/ExperimentConfig.html#configuration-spec>`__.
+`default specs defined </Tutorial/ExperimentConfig.rst#configuration-spec>`__  in the NNI doc.
 
 
 * **trainingServicePlatform**\ : Choose ``adl`` to use the Kubernetes cluster with AdaptDL scheduler.
@@ -86,6 +86,7 @@ Those configs not mentioned below, are following the
 * **tuner**\ : It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**\ : It defines the specs of an ``adl`` trial.
 
+  * **namespace**\: (*Optional*\ ) Kubernetes namespace to launch the trials. Default to ``default`` namespace.
   * **adaptive**\ : (*Optional*\ ) Boolean for AdaptDL trainer. While ``true``\ , it the job is preemptible and adaptive.
   * **image**\ : Docker image for the trial
   * **imagePullSecret**\ : (*Optional*\ ) If you are using a private registry,
@@ -97,7 +98,10 @@ Those configs not mentioned below, are following the
   * **memorySize**\ : (*Optional*\ ) the size of memory requested for this trial. It must follow the Kubernetes
     `default format <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory>`__.
   * **nfs**\ : (*Optional*\ ) mounting external storage. For more information about using NFS please check the below paragraph.
-  * **checkpoint** (*Optional*\ ) `storage settings <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for AdaptDL internal checkpoints. You can keep it optional if you are not dev users.
+  * **checkpoint** (*Optional*\ ) storage settings for model checkpoints.
+
+    * **storageClass**\ : check `Kubernetes storage documentation <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for how to use the appropriate ``storageClass``.
+    * **storageSize**\ : this value should be large enough to fit your model's checkpoints, or it could cause "disk quota exceeded" error.
 
 NFS Storage
 ^^^^^^^^^^^
